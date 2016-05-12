@@ -1,12 +1,14 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    byebug (8.2.4)
     colorize (0.7.7)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  byebug
   colorize
 
 BUNDLED WITH

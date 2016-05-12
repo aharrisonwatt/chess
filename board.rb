@@ -1,4 +1,5 @@
 require_relative 'pieces.rb'
+require 'byebug'
 
 class Board
   def initialize(fill = true)
@@ -6,22 +7,7 @@ class Board
     populate_grid if fill
   end
 
-
-  def move(start, end_pos)
-    if self[start].valid_move?(end_pos)
-      move!(start, end_pos)
-    else
-      raise StandardError.new("BAD MOVE")
-    end
-  end
-
-  def move!(start, end_pos)
-    piece = self[start]
-    piece.pos = end_pos
-    self[end_pos] = piece
-    self[start] = NullPiece.instance
-  end
-
+  #Board Setup Methods
   def populate_grid
     place_pieces(:white)
     place_pieces(:black)
@@ -29,13 +15,6 @@ class Board
 
   def place_piece(pos, piece_type, color)
     self[pos] = piece_type.new(self, pos, color)
-  end
-
-  def dup
-    new_board = Board.new(false)
-    pieces.each do |piece|
-      new_board.place_piece(piece.pos, piece.class, piece.color)
-    end
   end
 
   def pieces
@@ -68,20 +47,44 @@ class Board
     place_piece([row,4], King, color)
   end
 
-  def rows
-    @grid
+  #Move Methods
+  def move(start, end_pos)
+    if self[start].valid_moves.include?(end_pos)
+      move!(start, end_pos)
+    else
+      raise StandardError.new("BAD MOVE")
+    end
   end
+
+  def move!(start_pos, end_pos)
+    piece = self[start_pos]
+    piece.pos = end_pos
+    self[end_pos] = piece
+    self[start_pos] = NullPiece.instance
+  end
+
+  #Check/checkmate methods
+  def dup
+    new_board = Board.new(false)
+
+    pieces.each do |piece|
+      new_board[piece.pos] = piece.class.new(new_board, piece.pos, piece.color)
+    end
+
+    new_board
+  end
+
   def find_king(color)
     all_pos.select do |pos|
       self[pos].is_a?(King) && self[pos].color == color
-    end.first.flatten
+    end.first
   end
 
   def in_check?(color)
     king_pos = find_king(color)
     color == :white ? check_color = :black : check_color = :white
     all_pieces(check_color).any? do |piece|
-      piece.valid_moves.include?(king_pos)
+      piece.moves.include?(king_pos)
     end
   end
 
@@ -91,9 +94,19 @@ class Board
     end
   end
 
-  def checkmate?
-    false
+  def checkmate?(color)
+    return false unless in_check?(color)
+
+    pieces.select { |piece| piece.color == color }.all? do |piece|
+      piece.valid_moves.empty?
+    end
   end
+
+  #board location methods
+  def rows
+    @grid
+  end
+
   def in_range?(pos)
     x, y = pos
     (0...@grid.size).include?(x) && (0...@grid.size).include?(y)
@@ -117,3 +130,4 @@ class Board
     row,col = pos
     @grid[row][col] = piece
   end
+end
