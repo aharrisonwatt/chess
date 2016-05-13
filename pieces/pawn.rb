@@ -25,9 +25,13 @@ class Pawn < Piece
     end
 
     diag_left = [new_row, current_col - 1]
-    results << diag_left if @board.in_range?(diag_left) && @board[diag_left].color != @color
+    results << diag_left if @board.in_range?(diag_left) &&
+                            @board[diag_left].color != @color &&
+                            !@board.empty?(diag_left)
     diag_right = [new_row, current_col + 1]
-    results << diag_right if @board.in_range?(diag_right) && @board[diag_right].color != @color
+    results << diag_right if @board.in_range?(diag_right) &&
+                             @board[diag_right].color != @color &&
+                             !@board.empty?(diag_right)
     results
   end
 
